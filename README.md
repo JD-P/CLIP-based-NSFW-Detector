@@ -14,50 +14,26 @@ The (manually annotated) test set is there https://github.com/LAION-AI/CLIP-base
 
 https://github.com/rom1504/embedding-reader/blob/main/examples/inference_example.py inference on laion5B
 
-Example of use of the model:
+## Installation
 
-```python
-@lru_cache(maxsize=None)
-def load_safety_model(clip_model):
-    """load the safety model"""
-    import autokeras as ak  # pylint: disable=import-outside-toplevel
-    from tensorflow.keras.models import load_model  # pylint: disable=import-outside-toplevel
+Run the following commands to install the dependencies
 
-    cache_folder = get_cache_folder(clip_model)
+```
+python3 -m venv env_nsfw
+source env_nsfw/bin/activate
+pip install clip-anytorch autokeras
+git clone https://github.com/openai/CLIP/
+pip install ./CLIP
+```
 
-    if clip_model == "ViT-L/14":
-        model_dir = cache_folder + "/clip_autokeras_binary_nsfw"
-        dim = 768
-    elif clip_model == "ViT-B/32":
-        model_dir = cache_folder + "/clip_autokeras_nsfw_b32"
-        dim = 512
-    else:
-        raise ValueError("Unknown clip model")
-    if not os.path.exists(model_dir):
-        os.makedirs(cache_folder, exist_ok=True)
+You may have to reinstall pytorch with the right CUDA for your device, for most datacenter GPUs the command is:
 
-        from urllib.request import urlretrieve  # pylint: disable=import-outside-toplevel
+```
+pip3 install torch==1.10.1+cu113 torchvision==0.11.2+cu113 torchaudio==0.10.1+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html
+```
 
-        path_to_zip_file = cache_folder + "/clip_autokeras_binary_nsfw.zip"
-        if clip_model == "ViT-L/14":
-            url_model = "https://raw.githubusercontent.com/LAION-AI/CLIP-based-NSFW-Detector/main/clip_autokeras_binary_nsfw.zip"
-        elif clip_model == "ViT-B/32":
-            url_model = (
-                "https://raw.githubusercontent.com/LAION-AI/CLIP-based-NSFW-Detector/main/clip_autokeras_nsfw_b32.zip"
-            )
-        else:
-            raise ValueError("Unknown model {}".format(clip_model))  # pylint: disable=consider-using-f-string
-        urlretrieve(url_model, path_to_zip_file)
-        import zipfile  # pylint: disable=import-outside-toplevel
+Then run the `find_nsfw.py` demo utility on a flat directory of images:
 
-        with zipfile.ZipFile(path_to_zip_file, "r") as zip_ref:
-            zip_ref.extractall(cache_folder)
-
-    loaded_model = load_model(model_dir, custom_objects=ak.CUSTOM_OBJECTS)
-    loaded_model.predict(np.random.rand(10**3, dim).astype("float32"), batch_size=10**3)
-
-    return loaded_model
-    
-    
-nsfw_values = safety_model.predict(embeddings, batch_size=embeddings.shape[0])
+```
+python3 find_nsfw.py DIRECTORY
 ```
